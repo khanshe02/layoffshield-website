@@ -5,23 +5,19 @@ import { useState } from "react";
 export default function Home() {
   const [mode, setMode] = useState<"individual" | "business">("individual");
 
-  // Individual inputs
+  // Individual
   const [income, setIncome] = useState(15000);
   const [protection, setProtection] = useState(50);
   const [duration, setDuration] = useState<3 | 6>(6);
 
-  // Business inputs
+  // Business
   const [employees, setEmployees] = useState(10);
   const [bizProtection, setBizProtection] = useState(50);
   const [bizDuration, setBizDuration] = useState<3 | 6>(6);
 
   /**
-   * ACTUARIAL NOTE:
-   * 6-month waiting period applies to ALL plans.
-   * Pricing assumes:
-   * - No claims allowed in first 6 months
-   * - Reduced anti-selection
-   * - Lower effective claim probability
+   * Actuarial assumption:
+   * Mandatory 6-month waiting period for all plans
    */
 
   const individualPrice = Math.max(
@@ -48,22 +44,23 @@ export default function Home() {
 
       <div className="h-20" />
 
-      {/* ================= HERO ================= */}
+      {/* ================= HERO (REVERTED HEADLINE) ================= */}
       <section className="max-w-6xl mx-auto px-6 py-24 text-center">
         <h1 className="text-5xl font-bold tracking-tight">
-          Income Protection for an Uncertain Job Market
+          Financial Stability During{" "}
+          <span className="text-blue-600">Career Disruption</span>
         </h1>
 
         <p className="mt-6 text-xl text-gray-600 max-w-3xl mx-auto">
-          Financial support during verified layoffs — for individuals and
-          employers.
+          LayoffShield provides income-linked support to professionals navigating
+          layoffs, restructuring, and AI-driven change.
         </p>
 
         <a
           href="#pricing"
           className="inline-block mt-10 bg-blue-600 text-white px-10 py-4 rounded-xl text-lg font-semibold hover:bg-blue-700 transition"
         >
-          View pricing
+          See your pricing
         </a>
       </section>
 
@@ -72,13 +69,18 @@ export default function Home() {
         <div className="max-w-3xl mx-auto px-6">
 
           <div className="text-center mb-10">
-            <h2 className="text-4xl font-bold">Pricing</h2>
+            <h2 className="text-4xl font-bold">
+              Pricing based on your income
+            </h2>
             <p className="mt-4 text-gray-600 text-lg">
+              Fair, transparent, and aligned to your earnings
+            </p>
+            <p className="mt-2 text-sm text-gray-500">
               All plans include a mandatory 6-month waiting period
             </p>
           </div>
 
-          {/* MODE SWITCH */}
+          {/* MODE TOGGLE */}
           <div className="flex justify-center mb-10">
             <div className="bg-gray-100 p-1 rounded-xl flex gap-1">
               <button
@@ -106,7 +108,7 @@ export default function Home() {
 
           <div className="bg-gray-50 rounded-3xl p-10 shadow-sm space-y-10">
 
-            {/* ================= INDIVIDUAL ================= */}
+            {/* ========== INDIVIDUAL ========== */}
             {mode === "individual" && (
               <>
                 <div>
@@ -175,7 +177,7 @@ export default function Home() {
               </>
             )}
 
-            {/* ================= BUSINESS ================= */}
+            {/* ========== BUSINESS ========== */}
             {mode === "business" && (
               <>
                 <div>
@@ -247,7 +249,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ================= WAITLIST (RESTORED) ================= */}
+      {/* ================= WAITLIST ================= */}
       <section
         id="waitlist"
         className="bg-blue-600 text-white py-28 text-center"
