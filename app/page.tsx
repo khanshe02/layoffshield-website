@@ -7,27 +7,29 @@ export default function Home() {
 
   // Individual
   const [income, setIncome] = useState(15000);
-  const [protection, setProtection] = useState(50);
+  const [supportLevel, setSupportLevel] = useState(50);
   const [duration, setDuration] = useState<3 | 6>(6);
 
   // Business
   const [employees, setEmployees] = useState(10);
-  const [bizProtection, setBizProtection] = useState(50);
+  const [bizSupportLevel, setBizSupportLevel] = useState(50);
   const [bizDuration, setBizDuration] = useState<3 | 6>(6);
 
   /**
-   * Actuarial assumption:
-   * Mandatory 6-month waiting period for all plans
+   * Platform logic:
+   * - Subscription-based support platform
+   * - Not insurance
+   * - Mandatory 6-month waiting period
    */
 
   const individualPrice = Math.max(
     199,
-    Math.round((income * protection * duration) / 10000)
+    Math.round((income * supportLevel * duration) / 10000)
   );
 
   const businessPrice = Math.max(
     1999,
-    Math.round((employees * bizProtection * bizDuration * 99) / 10)
+    Math.round((employees * bizSupportLevel * bizDuration * 99) / 10)
   );
 
   return (
@@ -44,7 +46,7 @@ export default function Home() {
 
       <div className="h-20" />
 
-      {/* ================= HERO (REVERTED HEADLINE) ================= */}
+      {/* ================= HERO ================= */}
       <section className="max-w-6xl mx-auto px-6 py-24 text-center">
         <h1 className="text-5xl font-bold tracking-tight">
           Financial Stability During{" "}
@@ -52,8 +54,14 @@ export default function Home() {
         </h1>
 
         <p className="mt-6 text-xl text-gray-600 max-w-3xl mx-auto">
-          LayoffShield provides income-linked support to professionals navigating
-          layoffs, restructuring, and AI-driven change.
+          LayoffShield is a subscription-based platform providing conditional,
+          income-linked support and career transition resources when layoffs
+          and restructuring happen.
+        </p>
+
+        <p className="mt-4 text-sm text-gray-500 max-w-3xl mx-auto">
+          This is not insurance. LayoffShield offers supplemental support,
+          subject to eligibility rules and waiting periods.
         </p>
 
         <a
@@ -64,19 +72,43 @@ export default function Home() {
         </a>
       </section>
 
+      {/* ================= HOW IT WORKS ================= */}
+      <section className="max-w-5xl mx-auto px-6 pb-24">
+        <div className="grid md:grid-cols-3 gap-8 text-center">
+          <div className="bg-white rounded-2xl p-8 shadow-sm">
+            <h3 className="font-bold text-lg">Subscribe early</h3>
+            <p className="mt-3 text-gray-600">
+              Choose a plan based on your income and support needs.
+            </p>
+          </div>
+          <div className="bg-white rounded-2xl p-8 shadow-sm">
+            <h3 className="font-bold text-lg">Complete waiting period</h3>
+            <p className="mt-3 text-gray-600">
+              A mandatory 6-month waiting period ensures long-term fairness.
+            </p>
+          </div>
+          <div className="bg-white rounded-2xl p-8 shadow-sm">
+            <h3 className="font-bold text-lg">Get support if impacted</h3>
+            <p className="mt-3 text-gray-600">
+              Eligible members receive income support and career assistance.
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* ================= PRICING ================= */}
       <section id="pricing" className="bg-white py-28">
         <div className="max-w-3xl mx-auto px-6">
 
           <div className="text-center mb-10">
             <h2 className="text-4xl font-bold">
-              Pricing based on your income
+              Pricing aligned to your earnings
             </h2>
             <p className="mt-4 text-gray-600 text-lg">
-              Fair, transparent, and aligned to your earnings
+              Transparent subscription pricing with clear eligibility rules
             </p>
             <p className="mt-2 text-sm text-gray-500">
-              All plans include a mandatory 6-month waiting period
+              Mandatory 6-month waiting period applies to all plans
             </p>
           </div>
 
@@ -126,15 +158,15 @@ export default function Home() {
 
                 <div>
                   <label className="block font-semibold mb-4">
-                    Income protection
+                    Support level
                   </label>
                   <div className="grid grid-cols-3 gap-4">
                     {[40, 50, 60].map((p) => (
                       <button
                         key={p}
-                        onClick={() => setProtection(p)}
+                        onClick={() => setSupportLevel(p)}
                         className={`py-4 rounded-xl font-semibold ${
-                          protection === p
+                          supportLevel === p
                             ? "bg-blue-600 text-white"
                             : "bg-white border"
                         }`}
@@ -147,7 +179,7 @@ export default function Home() {
 
                 <div>
                   <label className="block font-semibold mb-4">
-                    Protection duration
+                    Support duration
                   </label>
                   <div className="grid grid-cols-2 gap-4">
                     {[3, 6].map((m) => (
@@ -195,15 +227,15 @@ export default function Home() {
 
                 <div>
                   <label className="block font-semibold mb-4">
-                    Coverage level
+                    Support level
                   </label>
                   <div className="grid grid-cols-3 gap-4">
                     {[40, 50, 60].map((p) => (
                       <button
                         key={p}
-                        onClick={() => setBizProtection(p)}
+                        onClick={() => setBizSupportLevel(p)}
                         className={`py-4 rounded-xl font-semibold ${
-                          bizProtection === p
+                          bizSupportLevel === p
                             ? "bg-blue-600 text-white"
                             : "bg-white border"
                         }`}
@@ -216,7 +248,7 @@ export default function Home() {
 
                 <div>
                   <label className="block font-semibold mb-4">
-                    Protection duration
+                    Support duration
                   </label>
                   <div className="grid grid-cols-2 gap-4">
                     {[3, 6].map((m) => (
@@ -249,6 +281,69 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ================= FAQ ================= */}
+      <section className="bg-gray-50 py-28">
+        <div className="max-w-4xl mx-auto px-6">
+          <h2 className="text-4xl font-bold text-center">
+            Frequently asked questions
+          </h2>
+
+          <div className="mt-12 space-y-8">
+            <div>
+              <h3 className="font-semibold text-lg">
+                Is LayoffShield an insurance product?
+              </h3>
+              <p className="mt-2 text-gray-600">
+                No. LayoffShield is a subscription-based support platform. It does
+                not provide insurance, guaranteed payouts, or regulated insurance
+                benefits.
+              </p>
+            </div>
+
+            <div>
+              <h3 className="font-semibold text-lg">
+                When do I become eligible for support?
+              </h3>
+              <p className="mt-2 text-gray-600">
+                Eligibility begins after completing a mandatory 6-month waiting
+                period from your subscription start date.
+              </p>
+            </div>
+
+            <div>
+              <h3 className="font-semibold text-lg">
+                What events qualify for support?
+              </h3>
+              <p className="mt-2 text-gray-600">
+                Involuntary layoffs, company-wide restructuring, or role
+                redundancy may qualify, subject to verification and platform
+                rules.
+              </p>
+            </div>
+
+            <div>
+              <h3 className="font-semibold text-lg">
+                How is support calculated?
+              </h3>
+              <p className="mt-2 text-gray-600">
+                Support is linked to your selected income level, support
+                percentage, and duration, and is capped per plan.
+              </p>
+            </div>
+
+            <div>
+              <h3 className="font-semibold text-lg">
+                Can I cancel my subscription anytime?
+              </h3>
+              <p className="mt-2 text-gray-600">
+                Yes. You can cancel at any time. However, eligibility resets if
+                you cancel before completing the waiting period.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ================= WAITLIST ================= */}
       <section
         id="waitlist"
@@ -259,7 +354,7 @@ export default function Home() {
             Join the early access waitlist
           </h2>
           <p className="mt-6 text-blue-100 text-lg">
-            Help shape LayoffShield before launch.
+            Be part of shaping the future of workforce resilience.
           </p>
 
           <a
