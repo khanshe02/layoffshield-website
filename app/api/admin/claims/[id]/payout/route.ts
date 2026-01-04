@@ -1,3 +1,4 @@
+import { insertClaimAudit } from "@/lib/claimAudit";
 import { NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabaseServer";
 
@@ -71,3 +72,12 @@ export async function POST(
 
   return NextResponse.json(data);
 }
+await insertClaimAudit({
+  claimId: id,
+  action: "PAID",
+  previousStatus: "APPROVED",
+  newStatus: "PAID",
+  metadata: {
+    payout_reference: data.payout_reference,
+  },
+});

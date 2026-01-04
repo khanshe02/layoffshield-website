@@ -1,3 +1,4 @@
+import { insertClaimAudit } from "@/lib/claimAudit";
 import { NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabaseServer";
 
@@ -25,15 +26,27 @@ export async function PATCH(
 
   const supabase = supabaseServer();
 
-  const { data, error } = await supabase
-    .from("claims")
-    .update({
-      status,
-      reviewed_at: new Date().toISOString(),
-    })
-    .eq("id", id)
-    .select()
-    .single();
+const previousStatus = claim.status;
+
+const { data, error } = await supabase
+  .from("claims")
+  .update({
+    status,
+    reviewed_at: new Date().toISOString(),
+  })
+  .eq("id", id)
+  .select()
+  .single();
+
+if (data) {
+  await insertClaimAudit({
+    claimId: id,
+    action: status,
+    previousStatus,
+    newStatus: status,
+  });
+}
+
 
   if (error) {
     return NextResponse.json(

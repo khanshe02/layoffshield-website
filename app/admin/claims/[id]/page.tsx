@@ -9,6 +9,8 @@ type Claim = {
   amount: number;
   created_at: string;
   paid_at?: string | null;
+  eligibility_status?: string | null;
+  eligibility_reason?: string | null;
 };
 
 export default function ReviewClaimPage() {
@@ -20,13 +22,8 @@ export default function ReviewClaimPage() {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
 
-  // Hard safety guard (LayoffShield standard)
   if (!claimId || claimId.includes("<") || claimId.includes(">")) {
-    return (
-      <div className="p-8 text-red-600">
-        Invalid claim identifier in URL.
-      </div>
-    );
+    return <div className="p-8 text-red-600">Invalid claim ID</div>;
   }
 
   const fetchClaim = async () => {
@@ -60,7 +57,25 @@ export default function ReviewClaimPage() {
           body: JSON.stringify({ status }),
         }
       );
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.error);
+      setClaim(body);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setActionLoading(false);
+    }
+  };
 
+  const checkEligibility = async () => {
+    setActionLoading(true);
+    setError(null);
+
+    try {
+      const res = await fetch(
+        `/api/admin/claims/${claimId}/eligibility`,
+        { method: "POST" }
+      );
       const body = await res.json();
       if (!res.ok) throw new Error(body.error);
       setClaim(body);
@@ -80,7 +95,6 @@ export default function ReviewClaimPage() {
         `/api/admin/claims/${claimId}/payout`,
         { method: "POST" }
       );
-
       const body = await res.json();
       if (!res.ok) throw new Error(body.error);
       setClaim(body);
@@ -91,111 +105,79 @@ export default function ReviewClaimPage() {
     }
   };
 
-  if (loading) {
-    return <div className="p-8">Loading claim details…</div>;
-  }
-
-  if (error) {
-    return (
-      <div className="p-8 text-red-600">
-        Error: {error}
-      </div>
-    );
-  }
-
-  if (!claim) {
-    return <div className="p-8">Claim not found.</div>;
-  }
+  if (loading) return <div className="p-8">Loading…</div>;
+  if (error) return <div className="p-8 text-red-600">{error}</div>;
+  if (!claim) return <div className="p-8">Claim not found</div>;
 
   return (
     <div className="max-w-3xl p-8 space-y-6">
-      <header>
-        <h1 className="text-2xl font-semibold">Claim Review</h1>
-        <p className="text-sm text-gray-500">
-          Admin review & payout control
-        </p>
-      </header>
+      <h1 className="text-2xl font-semibold">Claim Review</h1>
 
-      <section className="border rounded-lg p-6 space-y-3">
-        <Detail label="Claim ID" value={claim.id} />
-        <Detail label="Status" value={claim.status} />
-        <Detail label="Amount" value={`₹ ${claim.amount}`} />
-        <Detail label="Submitted" value={new Date(claim.created_at).toLocaleString()} />
-        <Detail
-          label="Paid At"
-          value={claim.paid_at ? new Date(claim.paid_at).toLocaleString() : "Not paid"}
-        />
-      </section>
+      <div className="border rounded-lg p-6 space-y-2 text-sm">
+        <Row label="Claim ID" value={claim.id} />
+        <Row label="Status" value={claim.status} />
+        <Row label="Amount" value={`₹ ${claim.amount}`} />
+        <Row label="Submitted" value={new Date(claim.created_at).toLocaleString()} />
+        <Row label="Eligibility" value={claim.eligibility_status ?? "PENDING"} />
+        {claim.eligibility_reason && (
+          <Row label="Eligibility Reason" value={claim.eligibility_reason} />
+        )}
+        <Row label="Paid At" value={claim.paid_at ?? "Not paid"} />
+      </div>
 
-      <section className="flex gap-4">
-        <ActionButton
-          label="Approve Claim"
-          disabled={claim.status === "APPROVED" || actionLoading}
+      <div className="flex gap-3">
+        <Button
+          label="Approve"
           onClick={() => updateStatus("APPROVED")}
-          variant="approve"
+          disabled={claim.status === "APPROVED" || actionLoading}
         />
-
-        <ActionButton
-          label="Reject Claim"
-          disabled={claim.status === "REJECTED" || actionLoading}
+        <Button
+          label="Reject"
           onClick={() => updateStatus("REJECTED")}
-          variant="reject"
+          disabled={claim.status === "REJECTED" || actionLoading}
         />
-
-        <ActionButton
-          label="Trigger Payout"
+        <Button
+          label="Check Eligibility"
+          onClick={checkEligibility}
+          disabled={actionLoading}
+        />
+        <Button
+          label="Pay"
+          onClick={triggerPayout}
           disabled={
             claim.status !== "APPROVED" ||
             !!claim.paid_at ||
             actionLoading
           }
-          onClick={triggerPayout}
-          variant="pay"
         />
-      </section>
-
-      {actionLoading && (
-        <p className="text-sm text-gray-500">
-          Processing admin action…
-        </p>
-      )}
+      </div>
     </div>
   );
 }
 
-/* ---------- Small internal components (UI only) ---------- */
-
-function Detail({ label, value }: { label: string; value: string }) {
+function Row({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex justify-between text-sm">
+    <div className="flex justify-between">
       <span className="text-gray-500">{label}</span>
       <span className="font-medium">{value}</span>
     </div>
   );
 }
 
-function ActionButton({
+function Button({
   label,
   onClick,
   disabled,
-  variant,
 }: {
   label: string;
   onClick: () => void;
   disabled: boolean;
-  variant: "approve" | "reject" | "pay";
 }) {
-  const styles: Record<typeof variant, string> = {
-    approve: "bg-green-600 hover:bg-green-700",
-    reject: "bg-red-600 hover:bg-red-700",
-    pay: "bg-blue-600 hover:bg-blue-700",
-  };
-
   return (
     <button
       onClick={onClick}
       disabled={disabled}
-      className={`px-4 py-2 text-sm text-white rounded-md disabled:opacity-50 disabled:cursor-not-allowed ${styles[variant]}`}
+      className="px-4 py-2 bg-blue-600 text-white rounded-md disabled:opacity-50"
     >
       {label}
     </button>
