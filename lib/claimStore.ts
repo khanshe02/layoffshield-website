@@ -1,4 +1,4 @@
-import { supabase } from './supabaseClient'
+import { supabase } from './supabaseServer'
 
 export type ClaimInput = {
   employer_name: string

@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { supabaseServer } from "@/lib/supabaseClient";
+import { supabaseServer } from "@/lib/supabaseServer";
 
 export async function GET(
-  req: Request,
+  _req: Request,
   context: { params: Promise<{ id: string }> }
 ) {
   const { id } = await context.params;
@@ -14,7 +14,9 @@ export async function GET(
     );
   }
 
-  const { data, error } = await supabaseServer
+  const supabase = supabaseServer();
+
+  const { data, error } = await supabase
     .from("claims")
     .select("*")
     .eq("id", id)

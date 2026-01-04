@@ -5,69 +5,44 @@ import { useParams } from "next/navigation";
 
 type Claim = {
   id: string;
-  employer: string;
-  reason: string;
   status: string;
-  eligibility_status: string | null;
+  amount: number;
+  created_at: string;
 };
 
 export default function ReviewClaimPage() {
   const params = useParams();
-  const claimId = params?.id as string;
+  const claimId = params.id as string;
 
   const [claim, setClaim] = useState<Claim | null>(null);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!claimId) return;
 
-    const loadClaim = async () => {
-      try {
-        const res = await fetch(`/api/admin/claims/${claimId}`);
-
-        if (!res.ok) {
-          const e = await res.json();
-          throw new Error(e.error || "Failed");
-        }
-
-        const data = await res.json();
-        setClaim(data);
-      } catch (err: any) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadClaim();
+    fetch(`/api/admin/claims/${claimId}`)
+      .then(async (res) => {
+        const body = await res.json();
+        if (!res.ok) throw new Error(body.error);
+        return body;
+      })
+      .then(setClaim)
+      .catch((err) => setError(err.message))
+      .finally(() => setLoading(false));
   }, [claimId]);
 
-  if (loading) {
-    return <div style={{ padding: 40 }}>Loading claim…</div>;
-  }
-
-  if (error) {
-    return <div style={{ padding: 40 }}>{error}</div>;
-  }
-
-  if (!claim) {
-    return <div style={{ padding: 40 }}>Claim not found</div>;
-  }
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error}</div>;
+  if (!claim) return <div>No claim found</div>;
 
   return (
-    <div style={{ padding: 40 }}>
-      <h1 style={{ fontSize: 28, fontWeight: 700 }}>
-        Claim Review
-      </h1>
-
-      <p><strong>Employer:</strong> {claim.employer}</p>
-      <p><strong>Reason:</strong> {claim.reason}</p>
+    <div style={{ padding: 24 }}>
+      <h1>Review Claim</h1>
+      <p><strong>ID:</strong> {claim.id}</p>
       <p><strong>Status:</strong> {claim.status}</p>
-      <p>
-        <strong>Eligibility:</strong>{" "}
-        {claim.eligibility_status ?? "Not evaluated"}
-      </p>
+      <p><strong>Amount:</strong> {claim.amount}</p>
+      <p><strong>Created:</strong> {claim.created_at}</p>
     </div>
   );
 }
