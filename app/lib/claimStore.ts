@@ -1,5 +1,5 @@
 import { supabaseServer } from "@/lib/supabaseServer";
- from './supabaseServer'
+ from './supabaseClient'
 
 export type ClaimInput = {
   employer_name: string

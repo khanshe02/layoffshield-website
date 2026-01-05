@@ -1,7 +1,9 @@
 export const runtime = "nodejs";
 
 import { NextResponse } from "next/server";
-import supabase from "@/src/supabase/supabaseServer";
+import { supabaseServer } from "@/lib/supabaseServer";
+ from "@/import { supabaseServer } from "@/lib/supabaseServer";
+/supabaseServer";
 
 export async function POST(req: Request) {
   try {
