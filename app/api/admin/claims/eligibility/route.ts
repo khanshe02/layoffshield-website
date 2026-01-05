@@ -1,26 +1,39 @@
-import { NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { supabaseServer } from "@/lib/supabaseServer";
 
-export async function POST(req: Request) {
-  const { id } = await req.json();
+export async function POST(
+  req: NextRequest,
+  context: any
+) {
+  const id = context.params.id;
 
-  const { data: claim } = await supabaseServer
-    .from("claims")
-    .select("reason")
-    .eq("id", id)
-    .single();
+  try {
+    const supabase = supabaseServer();
 
-  // LayoffShield v1 eligibility rules
-  const eligibleReasons = ["layoff", "redundancy"];
-  const eligibility =
-    claim && eligibleReasons.includes(claim.reason?.toLowerCase())
-      ? "ELIGIBLE"
-      : "NOT_ELIGIBLE";
+    const { data: claim, error } = await supabase
+      .from("claims")
+      .select("reason")
+      .eq("id", id)
+      .single();
 
-  await supabaseServer
-    .from("claims")
-    .update({ eligibility_status: eligibility })
-    .eq("id", id);
+    if (error || !claim) {
+      return new Response(
+        JSON.stringify({ eligible: false, reason: "Claim not found" }),
+        { status: 404 }
+      );
+    }
 
-  return NextResponse.json({ success: true });
+    // Simple eligibility rule (example)
+    const eligible = Boolean(claim.reason);
+
+    return new Response(
+      JSON.stringify({ eligible }),
+      { status: 200 }
+    );
+  } catch (err: any) {
+    return new Response(
+      JSON.stringify({ error: err.message || "Internal Server Error" }),
+      { status: 500 }
+    );
+  }
 }

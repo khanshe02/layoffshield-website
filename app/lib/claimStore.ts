@@ -1,29 +1,84 @@
 import { supabaseServer } from "@/lib/supabaseServer";
- from './supabaseClient'
+
+/* =========================
+   Types
+   ========================= */
 
 export type ClaimInput = {
-  employer_name: string
-  last_salary: number
-  job_loss_date: string
-}
+  employer_name: string;
+  reason: string;
+  start_date: string;
+  end_date?: string | null;
+};
 
-export async function createClaim(data: ClaimInput) {
-  const { data: claim, error } = await supabase
-    .from('claims')
-    .insert([
-      {
-        employer_name: data.employer_name,
-        last_salary: data.last_salary,
-        job_loss_date: data.job_loss_date,
-        status: 'submitted',
-      },
-    ])
+/* =========================
+   Create Claim
+   ========================= */
+
+export async function createClaim(
+  userId: string,
+  input: ClaimInput
+) {
+  const supabase = supabaseServer();
+
+  const { data, error } = await supabase
+    .from("claims")
+    .insert({
+      user_id: userId,
+      employer_name: input.employer_name,
+      reason: input.reason,
+      start_date: input.start_date,
+      end_date: input.end_date ?? null,
+      status: "SUBMITTED",
+    })
     .select()
-    .single()
+    .single();
 
   if (error) {
-    throw error
+    throw new Error(error.message);
   }
 
-  return claim
+  return data;
+}
+
+/* =========================
+   Get Claim By ID
+   ========================= */
+
+export async function getClaimById(claimId: string) {
+  const supabase = supabaseServer();
+
+  const { data, error } = await supabase
+    .from("claims")
+    .select("*")
+    .eq("id", claimId)
+    .single();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data;
+}
+
+/* =========================
+   Update Claim Status
+   ========================= */
+
+export async function updateClaimStatus(
+  claimId: string,
+  nextStatus: string
+) {
+  const supabase = supabaseServer();
+
+  const { error } = await supabase
+    .from("claims")
+    .update({ status: nextStatus })
+    .eq("id", claimId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return true;
 }

@@ -1,51 +1,30 @@
-cat > app/api/admin/claims/route.ts <<'EOF'
-import { NextResponse } from "next/server";
-import { supabaseServer } from "../../../lib/supabaseServer";
+import { NextRequest } from "next/server";
+import { supabaseServer } from "@/lib/supabaseServer";
 
-/**
- * GET /api/admin/claims
- */
-export async function GET() {
-  const { data, error } = await supabaseServer
-    .from("claims")
-    .select("*")
-    .order("created_at", { ascending: false });
+export async function GET(req: NextRequest) {
+  try {
+    const supabase = supabaseServer();
 
-  if (error) {
-    return NextResponse.json(
-      { error: error.message },
+    const { data, error } = await supabase
+      .from("claims")
+      .select("id, status")
+      .limit(10);
+
+    if (error) {
+      return new Response(
+        JSON.stringify({ error: error.message }),
+        { status: 400 }
+      );
+    }
+
+    return new Response(
+      JSON.stringify({ data }),
+      { status: 200 }
+    );
+  } catch (err: any) {
+    return new Response(
+      JSON.stringify({ error: err.message || "Internal Server Error" }),
       { status: 500 }
     );
   }
-
-  return NextResponse.json(data);
 }
-
-/**
- * PATCH /api/admin/claims
- */
-export async function PATCH(req: Request) {
-  const { id, status } = await req.json();
-
-  if (!id || !status) {
-    return NextResponse.json(
-      { error: "Missing id or status" },
-      { status: 400 }
-    );
-  }
-
-  const { error } = await supabaseServer
-    .from("claims")
-    .update({ status })
-    .eq("id", id);
-
-  if (error) {
-    return NextResponse.json(
-      { error: error.message },
-      { status: 500 }
-    );
-  }
-
-  return NextResponse.json({ success: true });
-}
-EOF

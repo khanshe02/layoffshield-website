@@ -1,17 +1,26 @@
-import { NextResponse } from 'next/server'
+import { NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabaseServer";
- from '@/lib/supabaseServer'
 
 export async function POST(req: Request) {
-  const body = await req.json()
+  try {
+    const body = await req.json();
+    const supabase = supabaseServer();
 
-  const { error } = await supabase
-    .from('onboarding')
-    .upsert(body, { onConflict: 'user_id' })
+    const { data, error } = await supabase
+      .from("onboarding")
+      .insert(body)
+      .select()
+      .single();
 
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
+
+    return NextResponse.json({ data });
+  } catch (err: any) {
+    return NextResponse.json(
+      { error: err.message || "Internal Server Error" },
+      { status: 500 }
+    );
   }
-
-  return NextResponse.json({ success: true })
 }

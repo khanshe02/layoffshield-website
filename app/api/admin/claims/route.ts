@@ -1,32 +1,45 @@
-import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { NextRequest } from "next/server";
+import { supabaseServer } from "@/lib/supabaseServer";
+import { insertClaimAudit } from "@/lib/claimAudit";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+export async function POST(
+  req: NextRequest,
+  context: any
+) {
+  const id = context.params.id;
 
-export async function GET() {
-  const { data, error } = await supabase
-    .from("claims")
-    .select(
-      `
-      id,
-      employer,
-      reason,
-      status,
-      eligibility_status,
-      created_at
-    `
-    )
-    .order("created_at", { ascending: false });
+  try {
+    const supabase = supabaseServer(); // ✅ THIS LINE IS CRITICAL
+    const body = await req.json();
+    const { status: nextStatus } = body;
 
-  if (error) {
-    return NextResponse.json(
-      { error: error.message },
+    const { error } = await supabase
+      .from("claims")
+      .update({ status: nextStatus })
+      .eq("id", id);
+
+    if (error) {
+      return new Response(
+        JSON.stringify({ error: error.message }),
+        { status: 400 }
+      );
+    }
+
+    await insertClaimAudit({
+      claimId: id,
+      action: "STATUS_UPDATE",
+      previousStatus: "UNKNOWN",
+      newStatus: nextStatus,
+    });
+
+    return new Response(
+      JSON.stringify({ success: true }),
+      { status: 200 }
+    );
+  } catch (err: any) {
+    return new Response(
+      JSON.stringify({ error: err.message || "Internal Server Error" }),
       { status: 500 }
     );
   }
-
-  return NextResponse.json(data ?? []);
 }

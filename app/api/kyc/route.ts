@@ -1,56 +1,26 @@
-export const runtime = "nodejs";
-
 import { NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabaseServer";
- from "@/import { supabaseServer } from "@/lib/supabaseServer";
-/supabaseServer";
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
 
-    const {
-      user_id,
-      full_name,
-      aadhaar_number,
-      pan_number,
-      date_of_birth,
-    } = body;
-
-    if (!user_id || !aadhaar_number || !pan_number) {
-      return NextResponse.json(
-        { error: "Missing required KYC fields" },
-        { status: 400 }
-      );
-    }
+    const supabase = supabaseServer();
 
     const { data, error } = await supabase
       .from("kyc")
-      .insert([
-        {
-          user_id,
-          full_name,
-          aadhaar_number,
-          pan_number,
-          date_of_birth,
-          status: "pending",
-        },
-      ])
+      .insert(body)
       .select()
       .single();
 
     if (error) {
-      return NextResponse.json(
-        { error: error.message },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
-    return NextResponse.json({ success: true, data });
-
-  } catch (err) {
+    return NextResponse.json({ data });
+  } catch (err: any) {
     return NextResponse.json(
-      { error: "Unexpected server error" },
+      { error: err.message || "Internal Server Error" },
       { status: 500 }
     );
   }

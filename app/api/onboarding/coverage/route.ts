@@ -1,38 +1,26 @@
-import { NextResponse } from 'next/server'
+import { NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabaseServer";
- from '@/lib/supabaseServer'
 
 export async function POST(req: Request) {
-  const body = await req.json()
-  const { plan_name, coverage_months, monthly_payout } = body
+  try {
+    const body = await req.json();
+    const supabase = supabaseServer();
 
-  const {
-    data: { user }
-  } = await supabase.auth.getUser()
+    const { data, error } = await supabase
+      .from("coverage")
+      .insert(body)
+      .select()
+      .single();
 
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
+
+    return NextResponse.json({ data });
+  } catch (err: any) {
+    return NextResponse.json(
+      { error: err.message || "Internal Server Error" },
+      { status: 500 }
+    );
   }
-
-  const onboardingDate = new Date()
-  const waitingDays = 180
-  const eligibleDate = new Date(onboardingDate)
-  eligibleDate.setDate(eligibleDate.getDate() + waitingDays)
-
-  const { error } = await supabase.from('coverage_contract').insert({
-    user_id: user.id,
-    plan_name,
-    coverage_months,
-    monthly_payout,
-    max_total_payout: coverage_months * monthly_payout,
-    onboarding_date: onboardingDate,
-    waiting_period_days: waitingDays,
-    claim_eligible_from: eligibleDate
-  })
-
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
-  }
-
-  return NextResponse.json({ success: true })
 }

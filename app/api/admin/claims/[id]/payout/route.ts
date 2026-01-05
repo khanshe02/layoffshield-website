@@ -1,83 +1,63 @@
-import { insertClaimAudit } from "@/lib/claimAudit";
-import { NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { supabaseServer } from "@/lib/supabaseServer";
-
-// UUID format guard (prevents <REAL-UUID>, <claim-id>, etc.)
-const UUID_REGEX =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+import { insertClaimAudit } from "@/lib/claimAudit";
 
 export async function POST(
-  _req: Request,
-  context: { params: Promise<{ id: string }> }
+  req: NextRequest,
+  context: any
 ) {
-  const { id } = await context.params;
+  const id = context.params.id;
 
-  console.log("PAYOUT ID RECEIVED:", id);
+  try {
+    const supabase = supabaseServer();
+    const body = await req.json();
+    const { status: newStatus } = body;
 
-  if (!id || !UUID_REGEX.test(id)) {
-    return NextResponse.json(
-      { error: "Invalid claim id format" },
-      { status: 400 }
+    // Fetch existing claim
+    const { data: claim, error: fetchError } = await supabase
+      .from("claims")
+      .select("status")
+      .eq("id", id)
+      .single();
+
+    if (fetchError || !claim) {
+      return new Response(
+        JSON.stringify({ error: "Claim not found" }),
+        { status: 404 }
+      );
+    }
+
+    const previousStatus = claim.status;
+
+    // Update claim
+    const { error: updateError } = await supabase
+      .from("claims")
+      .update({ status: newStatus })
+      .eq("id", id);
+
+    if (updateError) {
+      return new Response(
+        JSON.stringify({ error: updateError.message }),
+        { status: 400 }
+      );
+    }
+
+    // Audit trail
+    await insertClaimAudit({
+      claimId: id,
+      action: "STATUS_UPDATE",
+      previousStatus,
+      newStatus,
+    });
+
+    return new Response(
+      JSON.stringify({ success: true }),
+      { status: 200 }
     );
-  }
-
-  const supabase = supabaseServer();
-
-  // 1. Fetch claim
-  const { data: claim, error: fetchError } = await supabase
-    .from("claims")
-    .select("*")
-    .eq("id", id)
-    .single();
-
-  if (fetchError || !claim) {
-    return NextResponse.json(
-      { error: "Claim not found" },
-      { status: 404 }
-    );
-  }
-
-  // 2. Guards
-  if (claim.status !== "APPROVED") {
-    return NextResponse.json(
-      { error: "Claim must be APPROVED before payout" },
-      { status: 400 }
-    );
-  }
-
-  if (claim.paid_at) {
-    return NextResponse.json(
-      { error: "Claim already paid" },
-      { status: 400 }
-    );
-  }
-
-  // 3. Mark as paid
-  const { data, error } = await supabase
-    .from("claims")
-    .update({
-      paid_at: new Date().toISOString(),
-      payout_reference: `TEST-${Date.now()}`,
-    })
-    .eq("id", id)
-    .select()
-    .single();
-
-  if (error) {
-    return NextResponse.json(
-      { error: error.message },
+  } catch (err: any) {
+    return new Response(
+      JSON.stringify({ error: err.message || "Internal Server Error" }),
       { status: 500 }
     );
   }
-
-  return NextResponse.json(data);
 }
-await insertClaimAudit({
-  claimId: id,
-  action: "PAID",
-  previousStatus: "APPROVED",
-  newStatus: "PAID",
-  metadata: {
-    payout_reference: data.payout_reference,
-  },
-});
