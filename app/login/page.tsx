@@ -42,9 +42,19 @@ export default function LoginPage() {
           boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
         }}
       >
-<h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 8 }}>
+<h1
+  style={{
+    fontSize: 22,
+    fontWeight: 700,
+    marginBottom: 8,
+    color: "#000000",
+    WebkitFontSmoothing: "auto",
+    MozOsxFontSmoothing: "auto",
+  }}
+>
   Sign in to LayoffShield
 </h1>
+
 
 
         <p style={{ fontSize: 14, color: "#666", marginBottom: 24 }}>
