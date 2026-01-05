@@ -42,9 +42,10 @@ export default function LoginPage() {
           boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
         }}
       >
-        <h1 style={{ fontSize: 22, fontWeight: 600, marginBottom: 8 }}>
-          Sign in to LayoffShield
-        </h1>
+<h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 8 }}>
+  Sign in to LayoffShield
+</h1>
+
 
         <p style={{ fontSize: 14, color: "#666", marginBottom: 24 }}>
           We’ll send you a secure magic link to access your account.
