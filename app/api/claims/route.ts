@@ -1,51 +1,27 @@
 import { NextResponse } from "next/server";
-import { supabaseServer } from "../../lib/supabaseClient";
+import { supabaseServer } from "@/lib/supabaseServer";
 
 /**
  * POST /api/claims
- * Submit a claim (Phase 3)
+ * Create a new claim (user side)
  */
 export async function POST(req: Request) {
-  try {
-    const body = await req.json();
+  const body = await req.json();
 
-    const {
-      employer,
-      reason,
-      last_working_day,
-    } = body;
+  const supabase = supabaseServer();
 
-    if (!employer || !reason || !last_working_day) {
-      return NextResponse.json(
-        { error: "Missing required fields" },
-        { status: 400 }
-      );
-    }
+  const { data, error } = await supabase
+    .from("claims")
+    .insert(body)
+    .select()
+    .single();
 
-    const { error } = await supabaseServer
-      .from("claims")
-      .insert({
-        employer,
-        reason,
-        last_working_day,
-        status: "PENDING",
-      });
-
-    if (error) {
-      return NextResponse.json(
-        { error: error.message },
-        { status: 500 }
-      );
-    }
-
+  if (error) {
     return NextResponse.json(
-      { success: true },
-      { status: 200 }
-    );
-  } catch (err: any) {
-    return NextResponse.json(
-      { error: err.message || "Unexpected server error" },
+      { error: error.message },
       { status: 500 }
     );
   }
+
+  return NextResponse.json(data);
 }
